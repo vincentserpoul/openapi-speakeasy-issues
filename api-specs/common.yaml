@@ -1,0 +1,486 @@
+openapi: 3.0.0
+info:
+  title: common definitions
+  version: '1.0'
+  description: common definitions
+  license:
+    name: apache 2
+    url: 'https://apache.org/licenses/LICENSE-2.0'
+paths:
+  /dummy:
+    get:
+      summary: Dummy endpoint to satisfy OpenAPI validator
+      responses:
+        '200':
+          description: Successful response
+components:
+  responses:
+    problem-detail:
+      description: |-
+        RFC 9457: Problem Details for HTTP APIs
+        https://www.rfc-editor.org/rfc/rfc9457.html
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+          examples:
+            Example 1:
+              value:
+                type: 'https://example.com/v2/problems/xxx'
+                title: a title explaining the problem
+                instance: accounts/123
+                detail: information to help solve the issue
+    unauthorized:
+      description: Unauthorized
+      headers:
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        X-RateLimit-Reset:
+          $ref: '#/components/headers/X-RateLimit-Reset'
+        Retry-After:
+          $ref: '#/components/headers/Retry-After'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+          examples:
+            Example 1:
+              value:
+                type: 'https://example.com/v2/problems/unauthorized'
+                title: Unauthorized
+                instance: accounts/123
+                detail: 'You are not authorized to access this resource.'
+    not-found:
+      description: Resource not found
+      headers:
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        X-RateLimit-Reset:
+          $ref: '#/components/headers/X-RateLimit-Reset'
+        Retry-After:
+          $ref: '#/components/headers/Retry-After'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+          examples:
+            Example 1:
+              value:
+                type: 'https://example.com/v2/problems/not-found'
+                title: Not Found
+                instance: accounts/123
+                detail: 'The requested resource was not found.'
+    no-content:
+      description: No content
+      headers:
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        X-RateLimit-Reset:
+          $ref: '#/components/headers/X-RateLimit-Reset'
+        Retry-After:
+          $ref: '#/components/headers/Retry-After'
+    bad-request:
+      description: Bad request
+      headers:
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        X-RateLimit-Reset:
+          $ref: '#/components/headers/X-RateLimit-Reset'
+        Retry-After:
+          $ref: '#/components/headers/Retry-After'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+          examples:
+            Example 1:
+              value:
+                type: 'https://example.com/v2/problems/bad-request'
+                title: Bad Request
+                instance: accounts/123
+                detail: 'The request was invalid or cannot be served.'
+    conflict:
+      description: Conflict
+      headers:
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        X-RateLimit-Reset:
+          $ref: '#/components/headers/X-RateLimit-Reset'
+        Retry-After:
+          $ref: '#/components/headers/Retry-After'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+          examples:
+            Example 1:
+              value:
+                type: 'https://example.com/v2/problems/conflict'
+                title: Conflict
+                instance: accounts/123
+                detail: 'The request could not be completed due to a conflict with the current state of the resource.'
+    too-many-requests:
+      description: Too many requests
+      headers:
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        X-RateLimit-Reset:
+          $ref: '#/components/headers/X-RateLimit-Reset'
+        Retry-After:
+          $ref: '#/components/headers/Retry-After'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+          examples:
+            Example 1:
+              value:
+                type: 'https://example.com/v2/problems/too-many-requests'
+                title: Too Many Requests
+                instance: accounts/123
+                detail: 'You have exceeded the rate limit for this resource.'
+    internal-server-error:
+      description: Internal server error
+      headers:
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        X-RateLimit-Reset:
+          $ref: '#/components/headers/X-RateLimit-Reset'
+        Retry-After:
+          $ref: '#/components/headers/Retry-After'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+          examples:
+            Example 1:
+              value:
+                type: 'https://example.com/v2/problems/internal-server-error'
+                title: Internal Server Error
+                instance: accounts/123
+                detail: 'An unexpected error occurred on the server.'
+    unprocessable-entity:
+      description: Unprocessable Entity
+      headers:
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        X-RateLimit-Reset:
+          $ref: '#/components/headers/X-RateLimit-Reset'
+        Retry-After:
+          $ref: '#/components/headers/Retry-After'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+          examples:
+            Example 1:
+              value:
+                type: 'https://example.com/v2/problems/unprocessable-entity'
+                title: Unprocessable Entity
+                instance: accounts/123
+                detail: 'The request was well-formed but was unable to be processed.'
+  securitySchemes:
+    openId:
+      type: openIdConnect
+      openIdConnectUrl: 'https://xxx.com/.well-known/openid-configuration'
+    X-Api-Key:
+      name: X-Api-Key
+      type: apiKey
+      in: header
+      description: API key used for authentication
+
+  headers:
+    X-RateLimit-Limit:
+      description: The maximum number of requests that the client is allowed to make in this window.
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 10000
+      example: 100
+    X-RateLimit-Remaining:
+      description: The number of requests remaining in the current rate limit window.
+      schema:
+        type: integer
+        format: int32
+        minimum: 0
+        maximum: 10000
+      example: 99
+    X-RateLimit-Reset:
+      description: The time at which the current rate limit window resets in UTC epoch seconds.
+      schema:
+        type: integer
+        format: int32
+        minimum: 0
+        maximum: 2147483647
+      example: 1652364907
+    Retry-After:
+      description: The number of seconds to wait before making a new request when rate limit is exceeded.
+      schema:
+        type: integer
+        format: int32
+        minimum: 0
+        maximum: 3600
+      example: 60
+  schemas:
+    Entity:
+      title: Entity
+      description: entity that can be individual or corporate
+      oneOf:
+        - $ref: '#/components/schemas/IndividualEntity'
+        - $ref: '#/components/schemas/CorporateEntity'  
+    IndividualEntity:
+      title: IndividualEntity
+      type: object
+      description: individual entity
+      example:
+        id: "xxx-ykrit3642ha2gzdthfagghbnme"
+        email: "robert@vachon.com"
+        created_at: "2024-06-08T17:28:39.859284+08:00"
+        gender: "male"
+        first_name: "Robert"
+        last_name: "Vachon"
+        street: "1 rue de la bourse"
+        city: "Paris"
+        postal_code: "75001"
+        country: "FR"
+        nationality: "FR"
+        birth_country: "FR"
+        birth_date: "2024-06-31"
+        birth_place: "Paris"
+        entity_type: "individual"
+      properties:
+        id:
+          $ref: '#/components/schemas/EntityID'
+        email:
+          $ref: '#/components/schemas/Email'
+        created_at:
+          $ref: '#/components/schemas/Datetime'
+        first_name:
+          $ref: '#/components/schemas/PermissiveString'
+        last_name:
+          $ref: '#/components/schemas/PermissiveString'
+        street:
+          $ref: '#/components/schemas/PermissiveString'
+        city:
+          $ref: '#/components/schemas/PermissiveString'
+        postal_code:
+          $ref: '#/components/schemas/PermissiveString'
+        country:
+          $ref: './country.yaml#/components/schemas/CountryCode2'
+        nationality:
+          $ref: './country.yaml#/components/schemas/CountryCode2'
+        birth_country:
+          $ref: './country.yaml#/components/schemas/CountryCode2'
+        birth_date:
+          $ref: '#/components/schemas/Date'
+        birth_place:
+          $ref: '#/components/schemas/PermissiveString'
+    CorporateEntity:
+      title: CorporateEntity
+      description: corporate entity
+      example:
+        id: "xxx-ykrit3642ha2gzdthfagghbnme"
+        email: "contact@company.com"
+        created_at: "2024-06-08T17:28:39.859284+08:00"
+        street: "1 rue de la bourse"
+        city: "Paris"
+        postal_code: "75001"
+        country: "FR"
+        company_name: "Companame"
+        registration_country: "FR"
+        incorporation_date: "2024-06-31"
+        entity_type: "corporate"
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/EntityID'
+        name:
+          $ref: '#/components/schemas/PermissiveString'
+        email:
+          $ref: '#/components/schemas/Email'
+        created_at:
+          $ref: '#/components/schemas/Datetime'
+        street:
+          $ref: '#/components/schemas/PermissiveString'
+        city:
+          $ref: '#/components/schemas/PermissiveString'
+        postal_code:
+          $ref: '#/components/schemas/PermissiveString'
+        country:
+          $ref: './country.yaml#/components/schemas/CountryCode2'
+        company_name:
+          $ref: '#/components/schemas/PermissiveString'
+        registration_country:
+          $ref: './country.yaml#/components/schemas/CountryCode2'
+        incorporation_date:
+          $ref: '#/components/schemas/Date'
+
+    ProblemDetail:
+      title: ProblemDetail
+      type: object
+      description: RFC9457
+      required:
+        - type
+        - title
+        - detail
+        - instance
+      properties:
+        type:
+          type: string
+          example: 'https://example.com/probs/out-of-credit'
+          maxLength: 2000
+          minLength: 0
+          format: uri
+        title:
+          type: string
+          example: You do not have enough credit.
+          minLength: 0
+          maxLength: 1000
+          pattern: "^[\\w\\s\\-\\.,'\"!?()]+$"
+        detail:
+          type: string
+          example: 'Your current balance is 30, but that costs 50.'
+          minLength: 0
+          maxLength: 1000
+          pattern: "^[\\w\\s\\-\\.,'\"!?()]+$"
+        instance:
+          type: string
+          example: /account/12345/msgs/abc
+          minLength: 0
+          maxLength: 1000
+          format: uri
+      x-examples:
+        out of credit:
+          type: 'https://example.com/probs/out-of-credit'
+          title: You do not have enough credit.
+          detail: 'Your current balance is 30, but that costs 50.'
+          instance: /account/12345/msgs/abc
+    UUID:
+      title: UUID
+      type: string
+      example: 123e4567-e89b-7023-a456-426614174000
+      minLength: 36
+      maxLength: 36
+      format: uuid
+      description: UUID can be either v7 or v4
+      pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    CalVersioning:
+      title: CalVersioning
+      type: string
+      example: v2024.06.25.2230
+      pattern: '^v\d{4}\.\d{2}\.\d{2}\.\d{4}$'
+    EntityID:
+      type: string
+      title: Entity id
+      maxLength: 30
+      minLength: 30
+      pattern: ^xxx-
+      description: entity id
+      example: xxx-01hzy23cq44ae6k7vy5jtp8bef
+    Datetime:
+      title: Datetime
+      description: datetime
+      type: string
+      format: date-time
+      minLength: 0
+      maxLength: 200
+      example: '2024-06-08T17:28:39.859284+08:00'
+    PermissiveString:
+      type: string
+      example: 'lorem ipsum'
+      minLength: 0
+      maxLength: 500
+      pattern: '^[\p{L}\p{N}\p{P}\p{S}\s]*$'
+      description: >
+        A Unicode-permissive string that allows letters, numbers, punctuation, symbols, and whitespace.
+    Date:
+      title: Date
+      description: date
+      type: string
+      format: date
+      minLength: 0
+      maxLength: 200
+      example: '2024-06-31'
+    BirthDate:
+      title: Date
+      description: birth date
+      type: string
+      format: date
+      minLength: 0
+      maxLength: 200
+      example: '1980-06-31'
+    Email:
+      type: string
+      description: The email address of the user according to RFC 5322
+      format: email
+      example: random@example.com
+      maxLength: 254
+  parameters:
+    X-Idempotency-Key:
+      name: X-Idempotency-Key
+      in: header
+      required: true
+      description: Unique idempotency key for safely retrying requests without accidental duplication. Should be a UUIDv7.
+      schema:
+        $ref: '#/components/schemas/UUID'
+    X-Api-Version:
+      name: X-Api-Version
+      in: header
+      required: false
+      schema:
+        $ref: '#/components/schemas/CalVersioning'
+    Content-Disposition:
+      name: Content-Disposition
+      in: header
+      description: file name
+      schema:
+        type: string
+        example: 'attachment; filename="file.csv"'
+    limit:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int32
+        minimum: 0
+        maximum: 100
+        example: 10
+      description: number of records to be returned
+    starting_after:
+      name: starting_after
+      in: query
+      required: false
+      schema:
+        type: string
+        maxLength: 64
+        pattern: '[a-zA-Z0-9\-_]+'
+        example: xxx-01hzy23cq44ae6k7vy5jtp8bef
+      description: last id of the current list to fetch the next page
+    ending_before:
+      name: ending_before
+      in: query
+      required: false
+      schema:
+        type: string
+        maxLength: 64
+        pattern: '[a-zA-Z0-9\-_]+'
+        example: xxx-01hzy23cq44ae6k7vy5jtp8bef
+      description: first id of the current list to fetch the previous page

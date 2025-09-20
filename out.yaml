@@ -1,0 +1,1020 @@
+openapi: 3.1.0
+info:
+  title: test API
+  version: "0.1"
+  description: test
+  license:
+    name: apache 2
+    url: "https://apache.org/licenses/LICENSE-2.0"
+servers:
+  - url: "https://localhost:8086"
+    description: local dev server
+security:
+  - bearerAuth: []
+paths:
+  "/v3/entities":
+    get:
+      summary: list entities
+      operationId: list-v3-entities
+      description: >-
+        Retrieves a paginated list of all entities registered under the authenticated entity.
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/starting_after"
+        - $ref: "#/components/parameters/ending_before"
+      tags:
+        - entities
+      x-permissions:
+        - 'entity:list'
+      responses:
+        "200":
+          $ref: '#/components/responses/entity-list'
+        "400":
+          $ref: "#/components/responses/bad-request"
+        "401":
+          $ref: "#/components/responses/unauthorized"
+        "404":
+          $ref: "#/components/responses/not-found"
+        "429":
+          $ref: "#/components/responses/too-many-requests"
+        "500":
+          $ref: "#/components/responses/internal-server-error"
+    post:
+      summary: create a entity
+      operationId: post-v3-entities
+      description: >-
+        Creates a new entity. This endpoint handles both individual and corporate entity types, along with all required identification and address information. Entities are stored in a tree, so the parent_entity_id is used to establish relationships between entities. You can create multiple levels of entities, allowing for complex organizational structures.
+      tags:
+        - entities
+      x-permissions:
+        - 'entity:create'
+      requestBody:
+        $ref: "#/components/requestBodies/create-entity"
+      responses:
+        "201":
+          $ref: '#/components/responses/entity-response'
+        "400":
+          $ref: "#/components/responses/bad-request"
+        "401":
+          $ref: "#/components/responses/unauthorized"
+        "404":
+          $ref: "#/components/responses/not-found"
+        "409":
+          $ref: "#/components/responses/conflict"
+        "429":
+          $ref: "#/components/responses/too-many-requests"
+        "500":
+          $ref: "#/components/responses/internal-server-error"
+      parameters:
+        - $ref: "#/components/parameters/X-Idempotency-Key"
+  "/v3/entities/{entity-id}":
+    parameters:
+      - name: entity-id
+        description: entity id
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/EntityID"
+    get:
+      summary: get entity
+      description: >-
+        Retrieves detailed information about a specific entity by their unique identifier.
+      tags:
+        - entities
+      x-permissions:
+        - 'entity:get'
+      responses:
+        "200":
+          $ref: '#/components/responses/entity-response'
+        "400":
+          $ref: "#/components/responses/bad-request"
+        "401":
+          $ref: "#/components/responses/unauthorized"
+        "404":
+          $ref: "#/components/responses/not-found"
+        "429":
+          $ref: "#/components/responses/too-many-requests"
+        "500":
+          $ref: "#/components/responses/internal-server-error"
+      operationId: get-v3-entity
+    put:
+      summary: update entity details
+      description: >-
+        Updates the information of a specific entity. This endpoint allows entities to modify their personal or corporate information, contact details, and other KYC data.
+      tags:
+        - entities
+      operationId: put-v3-entity
+      x-permissions:
+        - 'entity:update'
+      requestBody:
+        $ref: "#/components/requestBodies/update-entity"
+      responses:
+        "200":
+          $ref: '#/components/responses/entity-response'
+        "400":
+          $ref: "#/components/responses/bad-request"
+        "401":
+          $ref: "#/components/responses/unauthorized"
+        "404":
+          $ref: "#/components/responses/not-found"
+        "409":
+          $ref: "#/components/responses/conflict"
+        "429":
+          $ref: "#/components/responses/too-many-requests"
+        "500":
+          $ref: "#/components/responses/internal-server-error"
+    delete:
+      summary: delete entity
+      description: >-
+        Deletes a entity entity from the system. This endpoint is used to permanently remove all entity information when an account is closed or for compliance with data privacy regulations like GDPR's "right to be forgotten". A entity can only be deleted if they have no active accounts or pending transactions. This operation is irreversible.
+      tags:
+        - entities
+      operationId: delete-v3-entity
+      x-permissions:
+        - 'entity:delete'
+      responses:
+        "204":
+          $ref: "#/components/responses/no-content"
+        "400":
+          $ref: "#/components/responses/bad-request"
+        "401":
+          $ref: "#/components/responses/unauthorized"
+        "404":
+          $ref: "#/components/responses/not-found"
+        "409":
+          $ref: "#/components/responses/conflict"
+        "429":
+          $ref: "#/components/responses/too-many-requests"
+        "500":
+          $ref: "#/components/responses/internal-server-error"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: This security scheme uses a Bearer Token for authentication. Clients must include the token in the `Authorization` header of their requests in the format `Bearer <token>`. The token is used to authenticate and authorize access to protected resources.
+  schemas:
+    CreateEntity:
+      description: Create a entity
+      oneOf:
+        - $ref: "#/components/schemas/CreateEntityIndividual"
+        - $ref: "#/components/schemas/CreateEntityCorporate"
+      discriminator:
+        propertyName: entity_type
+        mapping:
+          individual: "#/components/schemas/CreateEntityIndividual"
+          corporate: "#/components/schemas/CreateEntityCorporate"
+    CreateEntityIndividual:
+      title: CreateEntityIndividual
+      description: Create a entity individual
+      type: object
+      required:
+        - entity_type
+        - parent_entity_id
+        - first_name
+        - last_name
+      properties:
+        entity_type:
+          type: string
+          enum:
+            - individual
+        parent_entity_id:
+          $ref: "#/components/schemas/EntityID"
+        email:
+          $ref: "#/components/schemas/Email"
+        first_name:
+          type: string
+          example: John
+          maxLength: 100
+          pattern: "^[A-Za-z\\s\\-\\.']+"
+        last_name:
+          type: string
+          example: Doe
+          maxLength: 100
+          pattern: "^[A-Za-z\\s\\-\\.']+"
+        street:
+          type: string
+          example: 1 rue de la bourse
+          maxLength: 255
+          pattern: "^[\\p{L}\\p{N}\\s\\.,\\-#'\"/()]+$"
+        city:
+          $ref: '#/components/schemas/PermissiveString'
+        postal_code:
+          $ref: '#/components/schemas/PermissiveString'
+        country:
+          $ref: "#/components/schemas/CountryCode2"
+        nationality:
+          $ref: "#/components/schemas/CountryCode2"
+        birth_country:
+          $ref: "#/components/schemas/CountryCode2"
+        birth_date:
+          $ref: "#/components/schemas/Date"
+        birth_place:
+          $ref: '#/components/schemas/PermissiveString'
+    CreateEntityCorporate:
+      title: CreateEntityCorporate
+      description: Create a entity corporate
+      type: object
+      required:
+        - entity_type
+        - parent_entity_id
+        - company_name
+      properties:
+        entity_type:
+          type: string
+          enum:
+            - corporate
+        parent_entity_id:
+          $ref: "#/components/schemas/EntityID"
+        email:
+          $ref: "#/components/schemas/Email"
+        street:
+          type: string
+          example: "Blk 447 Clementi Ave 3 #01-201 S()"
+          maxLength: 100
+          pattern: '^[a-zA-Z0-9\s,#\-().]+$'
+        city:
+          type: string
+          example: singapore
+          maxLength: 50
+          pattern: '^[a-zA-Z\s\-]+$'
+        postal_code:
+          type: string
+          example: "120447"
+          maxLength: 10
+          pattern: '^[0-9A-Za-z\-]+$'
+        country:
+          $ref: "#/components/schemas/CountryCode2"
+        company_name:
+          type: string
+          example: Wisoky - Berge
+          maxLength: 100
+          pattern: '^[a-zA-Z0-9\s\-&,\.]+$'
+        registration_country:
+          $ref: "#/components/schemas/CountryCode2"
+        incorporation_date:
+          $ref: "#/components/schemas/Date"
+    ProblemDetail:
+      type: object
+      properties:
+        type:
+          type: string
+          maxLength: 2000
+          minLength: 0
+          format: uri
+          example: 'https://example.com/probs/out-of-credit'
+        title:
+          type: string
+          maxLength: 1000
+          minLength: 0
+          pattern: ^[\w\s\-\.,'"!?()]+$
+          example: You do not have enough credit.
+        detail:
+          type: string
+          maxLength: 1000
+          minLength: 0
+          pattern: ^[\w\s\-\.,'"!?()]+$
+          example: 'Your current balance is 30, but that costs 50.'
+        instance:
+          type: string
+          maxLength: 1000
+          minLength: 0
+          format: uri
+          example: /account/12345/msgs/abc
+      title: ProblemDetail
+      required:
+        - type
+        - title
+        - detail
+        - instance
+      description: RFC9457
+      x-examples:
+        out of credit:
+          type: 'https://example.com/probs/out-of-credit'
+          title: You do not have enough credit.
+          detail: 'Your current balance is 30, but that costs 50.'
+          instance: /account/12345/msgs/abc
+    UUID:
+      type: string
+      title: UUID
+      maxLength: 36
+      minLength: 36
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+      format: uuid
+      description: UUID can be either v7 or v4
+      example: 123e4567-e89b-7023-a456-426614174000
+    EntityID:
+      type: string
+      title: Entity id
+      maxLength: 30
+      minLength: 30
+      pattern: ^xxx-
+      description: entity id
+      example: xxx-01hzy23cq44ae6k7vy5jtp8bef
+    Email:
+      type: string
+      maxLength: 254
+      format: email
+      description: The email address of the user according to RFC 5322
+      example: random@example.com
+    PermissiveString:
+      type: string
+      maxLength: 500
+      minLength: 0
+      pattern: ^[\p{L}\p{N}\p{P}\p{S}\s]*$
+      description: |
+        A Unicode-permissive string that allows letters, numbers, punctuation, symbols, and whitespace.
+      example: 'lorem ipsum'
+    CountryCode2:
+      type: string
+      title: CountryCode2
+      enum:
+        - AW
+        - AF
+        - AO
+        - AI
+        - AX
+        - AL
+        - AD
+        - AE
+        - AR
+        - AM
+        - AS
+        - AQ
+        - TF
+        - AG
+        - AU
+        - AT
+        - AZ
+        - BI
+        - BE
+        - BJ
+        - BQ
+        - BF
+        - BD
+        - BG
+        - BH
+        - BS
+        - BA
+        - BL
+        - BY
+        - BZ
+        - BM
+        - BO
+        - BR
+        - BB
+        - BN
+        - BT
+        - BV
+        - BW
+        - CF
+        - CA
+        - CC
+        - CH
+        - CL
+        - CN
+        - CI
+        - CM
+        - CD
+        - CG
+        - CK
+        - CO
+        - KM
+        - CV
+        - CR
+        - CU
+        - CW
+        - CX
+        - KY
+        - CY
+        - CZ
+        - DE
+        - DJ
+        - DM
+        - DK
+        - DO
+        - DZ
+        - EC
+        - EG
+        - ER
+        - EH
+        - ES
+        - EE
+        - ET
+        - FI
+        - FJ
+        - FK
+        - FR
+        - FO
+        - FM
+        - GA
+        - GB
+        - GE
+        - GG
+        - GH
+        - GI
+        - GN
+        - GP
+        - GM
+        - GW
+        - GQ
+        - GR
+        - GD
+        - GL
+        - GT
+        - GF
+        - GU
+        - GY
+        - HK
+        - HM
+        - HN
+        - HR
+        - HT
+        - HU
+        - ID
+        - IM
+        - IN
+        - IO
+        - IE
+        - IR
+        - IQ
+        - IS
+        - IL
+        - IT
+        - JM
+        - JE
+        - JO
+        - JP
+        - KZ
+        - KE
+        - KG
+        - KH
+        - KI
+        - KN
+        - KR
+        - KW
+        - LA
+        - LB
+        - LR
+        - LY
+        - LC
+        - LI
+        - LK
+        - LS
+        - LT
+        - LU
+        - LV
+        - MO
+        - MF
+        - MA
+        - MC
+        - MD
+        - MG
+        - MV
+        - MX
+        - MH
+        - MK
+        - ML
+        - MT
+        - MM
+        - ME
+        - MN
+        - MP
+        - MZ
+        - MR
+        - MS
+        - MQ
+        - MU
+        - MW
+        - MY
+        - YT
+        - NA
+        - NC
+        - NE
+        - NF
+        - NG
+        - NI
+        - NU
+        - NL
+        - NO
+        - NP
+        - NR
+        - NZ
+        - OM
+        - PK
+        - PA
+        - PN
+        - PE
+        - PH
+        - PW
+        - PG
+        - PL
+        - PR
+        - KP
+        - PT
+        - PY
+        - PS
+        - PF
+        - QA
+        - RE
+        - RO
+        - RU
+        - RW
+        - SA
+        - SD
+        - SN
+        - SG
+        - GS
+        - SH
+        - SJ
+        - SB
+        - SL
+        - SV
+        - SM
+        - SO
+        - PM
+        - RS
+        - SS
+        - ST
+        - SR
+        - SK
+        - SI
+        - SE
+        - SZ
+        - SX
+        - SC
+        - SY
+        - TC
+        - TD
+        - TG
+        - TH
+        - TJ
+        - TK
+        - TM
+        - TL
+        - TO
+        - TT
+        - TN
+        - TR
+        - TV
+        - TW
+        - TZ
+        - UG
+        - UA
+        - UM
+        - UY
+        - US
+        - UZ
+        - VA
+        - VC
+        - VE
+        - VG
+        - VI
+        - VN
+        - VU
+        - WF
+        - WS
+        - YE
+        - ZA
+        - ZM
+        - ZW
+        - ZZ
+      example: FR
+      x-go-type: country.Code2
+    Date:
+      type: string
+      title: Date
+      maxLength: 200
+      minLength: 0
+      format: date
+      description: date
+      example: '2024-06-31'
+    IndividualEntity:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/EntityID'
+        email:
+          $ref: '#/components/schemas/Email'
+        created_at:
+          $ref: '#/components/schemas/Datetime'
+        first_name:
+          $ref: '#/components/schemas/PermissiveString'
+        last_name:
+          $ref: '#/components/schemas/PermissiveString'
+        street:
+          $ref: '#/components/schemas/PermissiveString'
+        city:
+          $ref: '#/components/schemas/PermissiveString'
+        postal_code:
+          $ref: '#/components/schemas/PermissiveString'
+        country:
+          $ref: ./country.yaml#/components/schemas/CountryCode2
+        nationality:
+          $ref: ./country.yaml#/components/schemas/CountryCode2
+        birth_country:
+          $ref: ./country.yaml#/components/schemas/CountryCode2
+        birth_date:
+          $ref: '#/components/schemas/Date'
+        birth_place:
+          $ref: '#/components/schemas/PermissiveString'
+      title: IndividualEntity
+      description: individual entity
+      example:
+        id: "xxx-ykrit3642ha2gzdthfagghbnme"
+        email: "robert@vachon.com"
+        created_at: "2024-06-08T17:28:39.859284+08:00"
+        gender: "male"
+        first_name: "Robert"
+        last_name: "Vachon"
+        street: "1 rue de la bourse"
+        city: "Paris"
+        postal_code: "75001"
+        country: "FR"
+        nationality: "FR"
+        birth_country: "FR"
+        birth_date: "2024-06-31"
+        birth_place: "Paris"
+        entity_type: "individual"
+    Datetime:
+      type: string
+      title: Datetime
+      maxLength: 200
+      minLength: 0
+      format: date-time
+      description: datetime
+      example: '2024-06-08T17:28:39.859284+08:00'
+    CorporateEntity:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/EntityID'
+        name:
+          $ref: '#/components/schemas/PermissiveString'
+        email:
+          $ref: '#/components/schemas/Email'
+        created_at:
+          $ref: '#/components/schemas/Datetime'
+        street:
+          $ref: '#/components/schemas/PermissiveString'
+        city:
+          $ref: '#/components/schemas/PermissiveString'
+        postal_code:
+          $ref: '#/components/schemas/PermissiveString'
+        country:
+          $ref: ./country.yaml#/components/schemas/CountryCode2
+        company_name:
+          $ref: '#/components/schemas/PermissiveString'
+        registration_country:
+          $ref: ./country.yaml#/components/schemas/CountryCode2
+        incorporation_date:
+          $ref: '#/components/schemas/Date'
+      title: CorporateEntity
+      description: corporate entity
+      example:
+        id: "xxx-ykrit3642ha2gzdthfagghbnme"
+        email: "contact@company.com"
+        created_at: "2024-06-08T17:28:39.859284+08:00"
+        street: "1 rue de la bourse"
+        city: "Paris"
+        postal_code: "75001"
+        country: "FR"
+        company_name: "Companame"
+        registration_country: "FR"
+        incorporation_date: "2024-06-31"
+        entity_type: "corporate"
+    Entity:
+      oneOf:
+        - $ref: '#/components/schemas/IndividualEntity'
+        - $ref: '#/components/schemas/CorporateEntity'
+      title: Entity
+      description: entity that can be individual or corporate
+  responses:
+    entity-response:
+      description: Entity details
+      headers:
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        X-RateLimit-Reset:
+          $ref: '#/components/headers/X-RateLimit-Reset'
+        Retry-After:
+          $ref: '#/components/headers/Retry-After'
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: "#/components/schemas/IndividualEntity"
+              - $ref: "#/components/schemas/CorporateEntity"
+    entity-list:
+      description: List of entities
+      headers:
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        X-RateLimit-Reset:
+          $ref: '#/components/headers/X-RateLimit-Reset'
+        Retry-After:
+          $ref: '#/components/headers/Retry-After'
+      content:
+        application/json:
+          schema:
+            required:
+              - has_more
+              - data
+            properties:
+              has_more:
+                type: boolean
+                example: true
+              data:
+                type: array
+                maxItems: 2000
+                items:
+                  $ref: "#/components/schemas/Entity"
+    bad-request:
+      description: Bad request
+      headers:
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        X-RateLimit-Reset:
+          $ref: '#/components/headers/X-RateLimit-Reset'
+        Retry-After:
+          $ref: '#/components/headers/Retry-After'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+          examples:
+            Example 1:
+              value:
+                type: 'https://example.com/v2/problems/bad-request'
+                title: Bad Request
+                instance: accounts/123
+                detail: 'The request was invalid or cannot be served.'
+    unauthorized:
+      description: Unauthorized
+      headers:
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        X-RateLimit-Reset:
+          $ref: '#/components/headers/X-RateLimit-Reset'
+        Retry-After:
+          $ref: '#/components/headers/Retry-After'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+          examples:
+            Example 1:
+              value:
+                type: 'https://example.com/v2/problems/unauthorized'
+                title: Unauthorized
+                instance: accounts/123
+                detail: 'You are not authorized to access this resource.'
+    not-found:
+      description: Resource not found
+      headers:
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        X-RateLimit-Reset:
+          $ref: '#/components/headers/X-RateLimit-Reset'
+        Retry-After:
+          $ref: '#/components/headers/Retry-After'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+          examples:
+            Example 1:
+              value:
+                type: 'https://example.com/v2/problems/not-found'
+                title: Not Found
+                instance: accounts/123
+                detail: 'The requested resource was not found.'
+    too-many-requests:
+      description: Too many requests
+      headers:
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        X-RateLimit-Reset:
+          $ref: '#/components/headers/X-RateLimit-Reset'
+        Retry-After:
+          $ref: '#/components/headers/Retry-After'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+          examples:
+            Example 1:
+              value:
+                type: 'https://example.com/v2/problems/too-many-requests'
+                title: Too Many Requests
+                instance: accounts/123
+                detail: 'You have exceeded the rate limit for this resource.'
+    internal-server-error:
+      description: Internal server error
+      headers:
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        X-RateLimit-Reset:
+          $ref: '#/components/headers/X-RateLimit-Reset'
+        Retry-After:
+          $ref: '#/components/headers/Retry-After'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+          examples:
+            Example 1:
+              value:
+                type: 'https://example.com/v2/problems/internal-server-error'
+                title: Internal Server Error
+                instance: accounts/123
+                detail: 'An unexpected error occurred on the server.'
+    conflict:
+      description: Conflict
+      headers:
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        X-RateLimit-Reset:
+          $ref: '#/components/headers/X-RateLimit-Reset'
+        Retry-After:
+          $ref: '#/components/headers/Retry-After'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+          examples:
+            Example 1:
+              value:
+                type: 'https://example.com/v2/problems/conflict'
+                title: Conflict
+                instance: accounts/123
+                detail: 'The request could not be completed due to a conflict with the current state of the resource.'
+    no-content:
+      description: No content
+      headers:
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+        X-RateLimit-Reset:
+          $ref: '#/components/headers/X-RateLimit-Reset'
+        Retry-After:
+          $ref: '#/components/headers/Retry-After'
+  requestBodies:
+    create-entity:
+      description: Entity creation payload
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/CreateEntity"
+    update-entity:
+      description: Entity update payload
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/CreateEntity"
+              - type: object
+                properties:
+                  id:
+                    $ref: "#/components/schemas/EntityID"
+  parameters:
+    holder-entity-id-optional:
+      name: holder_entity_id
+      required: false
+      in: query
+      description: The ID of the entity that owns the account
+      schema:
+        $ref: "#/components/schemas/EntityID"
+    owner-entity-id-optional:
+      name: owner_entity_id
+      required: false
+      in: query
+      description: The ID of the owner entity
+      schema:
+        $ref: "#/components/schemas/EntityID"
+    limit:
+      name: limit
+      in: query
+      description: number of records to be returned
+      required: false
+      schema:
+        type: integer
+        maximum: 100
+        minimum: 0
+        format: int32
+        example: 10
+    starting_after:
+      name: starting_after
+      in: query
+      description: last id of the current list to fetch the next page
+      required: false
+      schema:
+        type: string
+        maxLength: 64
+        pattern: '[a-zA-Z0-9\-_]+'
+        example: xxx-01hzy23cq44ae6k7vy5jtp8bef
+    ending_before:
+      name: ending_before
+      in: query
+      description: first id of the current list to fetch the previous page
+      required: false
+      schema:
+        type: string
+        maxLength: 64
+        pattern: '[a-zA-Z0-9\-_]+'
+        example: xxx-01hzy23cq44ae6k7vy5jtp8bef
+    X-Idempotency-Key:
+      name: X-Idempotency-Key
+      in: header
+      description: Unique idempotency key for safely retrying requests without accidental duplication. Should be a UUIDv7.
+      required: true
+      schema:
+        $ref: '#/components/schemas/UUID'
+  headers:
+    X-RateLimit-Limit:
+      description: The maximum number of requests that the client is allowed to make in this window.
+      schema:
+        type: integer
+        maximum: 10000
+        minimum: 1
+        format: int32
+      example: 100
+    X-RateLimit-Remaining:
+      description: The number of requests remaining in the current rate limit window.
+      schema:
+        type: integer
+        maximum: 10000
+        minimum: 0
+        format: int32
+      example: 99
+    X-RateLimit-Reset:
+      description: The time at which the current rate limit window resets in UTC epoch seconds.
+      schema:
+        type: integer
+        maximum: 2.147483647e+09
+        minimum: 0
+        format: int32
+      example: 1652364907
+    Retry-After:
+      description: The number of seconds to wait before making a new request when rate limit is exceeded.
+      schema:
+        type: integer
+        maximum: 3600
+        minimum: 0
+        format: int32
+      example: 60
+tags:
+  - name: entities
+    description: Operations related to entity management
+  - name: accounts
+    description: Operations related to accounts
+  - name: wallet accounts
+    description: Operations related to wallet accounts (IBAN, etc)
+  - name: deposit accounts
+    description: Operations related to deposit accounts
+  - name: internal transfers
+    description: Operations related to internal transfers
+  - name: payins
+    description: Operations related to paying in to accounts
+  - name: payouts
+    description: Operations related to paying out from accounts
+  - name: recipients
+    description: Operations related to recipients
+  - name: recipient accounts
+    description: Operations related to recipient accounts
+  - name: transfers
+    description: Operations related to transfers between external accounts
+  - name: capabilities
+    description: Operations related to capabilities which have specific requirements
+  - name: notifications
+    description: |
+      The notifications API allows an entity to manage its subscriptions to events and their recipients.
+      A subscription requires a recipient (email or webhook URL), an event type to subscribe to and optionally a template to use for customizing the notification; a default template is used if none is specified.
+
+      To subscribe an event for email notifications:
+        - Create an email recipient: <b>POST /v3/notifications/{entity-id}/emails</b>
+        - Create a subscription for the <b>event_type</b> using the returned ID: <b>PUT /v3/notifications/{entity-id}/subscriptions</b>
+
+      To subscribe an event for webhook notifications:
+        - Create a webhook recipient: <b>POST /v3/notifications/{entity-id}/webhooks</b>
+        - Create a subscription for the <b>event_type</b> using the returned ID: <b>PUT /v3/notifications/{entity-id}/subscriptions</b>
+        - If the chosen signing method is hmac_sha256 and a signing key is not already created, create a signing key to allow webhook signing: <b>PUT /v3/notifications/{entity-id}/webhooks/keys/{method}</b>.  The key will be used to sign for all webhook payloads.
+  - name: sandbox
+    description: Operations related to sandbox testing and capabilities
